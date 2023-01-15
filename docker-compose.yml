@@ -1,0 +1,82 @@
+version: '3.8'
+
+# https://github.com/compose-spec/compose-spec/blob/master/spec.md#name-top-level-element
+name: 'orbitmines'
+
+# TODO: Route the docker builds & containers to private-npm-registry for NPM install
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+#      - "4001:4001"
+#      - "4001:4001/udp"
+#      - "8080:8080"
+      - "22:22"
+      - "80:80"
+    volumes:
+      - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
+    restart: always
+    depends_on:
+      - npm-registry
+      - private-ipfs-node
+#      - public-ipfs-node
+      - gitlab
+  npm-registry:
+    image: verdaccio/verdaccio:nightly-master
+    restart: always
+    user: root # TODO; FIX FILE ACCESS on current user?
+#    ports:*
+#      - "4873:4873"
+    volumes:
+      # Configuration
+      - ./conf/npm-registry/config.yaml:/verdaccio/conf/config.yaml
+      # Storage on host
+      - ./.orbitmines/npm-registry/conf:/verdaccio/conf
+      - ./.orbitmines/npm-registry/storage:/verdaccio/storage
+      - ./.orbitmines/npm-registry/plugins:/verdaccio/plugins
+  gitlab:
+    image: gitlab/gitlab-ee:15.5.6-ee.0
+    user: root # TODO; FIX FILE ACCESS on current user?
+#    environment:
+#      GITLAB_OMNIBUS_CONFIG: |
+#        external_url 'gitlab.orbitmines.localhost'
+        # Add any other gitlab.rb configuration here, each on its own line
+    restart: always
+    shm_size: 256m
+#    ports:
+#      - "443:443"
+#      - "80:80"
+#      - "22:22"
+    volumes:
+      # Configuration
+      - ./conf/git/gitlab/gitlab.rb:/etc/gitlab/gitlab.rb
+      # Storage on host
+      - ./.orbitmines/git/gitlab/data:/var/opt/gitlab
+      - ./.orbitmines/git/gitlab/logs:/var/log/gitlab
+      - ./.orbitmines/git/gitlab/config:/etc/gitlab
+#  public-ipfs-node:
+#    image: ipfs/kubo:v0.16.0
+#    user: root # TODO; FIX FILE ACCESS on current user?
+#    environment:
+#      IPFS_LOGGING: debug
+#    volumes:
+#      # Storage on host
+#      - ./.orbitmines/ipfs/public/export:/export
+#      - ./.orbitmines/ipfs/public/data/ipfs:/data/ipfs
+  private-ipfs-node:
+    build:
+      dockerfile: ./conf/ipfs/private/Dockerfile
+    user: root # TODO; FIX FILE ACCESS on current user?
+    restart: always
+    environment:
+#      IPFS_LOGGING: debug
+      # To be extra cautious, You can also set the LIBP2P_FORCE_PNET environment variable to 1 to force the usage of
+      # private networks. If no private network is configured, the daemon will fail to start.
+      LIBP2P_FORCE_PNET: 1
+    volumes:
+      # Configuration
+      - ./conf/ipfs/private/swarm.key:/data/ipfs/swarm.key
+      # Storage on host
+      - ./.orbitmines/ipfs/private/export:/export
+      - ./.orbitmines/ipfs/private/data/ipfs:/data/ipfs

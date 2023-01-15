@@ -1,0 +1,8 @@
+# OrbitMines workspace, local files
+.orbitmines
+conf/ipfs/private/swarm.key
+
+# IntelliJ
+.idea
+
+node_modules

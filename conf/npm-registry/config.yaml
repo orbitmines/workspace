@@ -1,0 +1,36 @@
+# https://verdaccio.org/docs/configuration
+
+storage: ./storage
+
+# https://verdaccio.org/docs/webui/
+web:
+  enable: true
+  title: OrbitMines Local NPM Registry
+
+auth:
+  htpasswd:
+    file: ./htpasswd
+    algorithm: bcrypt
+    rounds: 10
+    # In case you decide to prevent users from signing up themselves, you can set max_users: -1.
+#    max_users: -1
+
+# https://verdaccio.org/docs/uplinks
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+
+# https://verdaccio.org/docs/packages/
+packages:
+  "@orbitmines/*":
+    access: $all
+    publish: $all
+  "@*/*":
+    access: $all
+    publish: $authenticated
+    proxy: npmjs
+  "**":
+    access: $all
+    proxy: npmjs
+
+log: { type: stdout, format: pretty, level: http }
