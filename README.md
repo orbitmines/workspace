@@ -1,3 +1,7 @@
+### TODO
+- Socials: [NPM](https://www.npmjs.com/org/orbitmines)
+
+---
 
 ### Prerequisits
 - NPM
