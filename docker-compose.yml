@@ -5,8 +5,38 @@ name: 'orbitmines'
 
 # TODO: Route the docker builds & containers to private-npm-registry for NPM install
 
+networks:
+  local-orbitmines:
+    driver: bridge
+
 services:
+  http:
+    build:
+      context: ./github.com/orbitmines/interface/browser
+      dockerfile: ./Dockerfile
+    environment:
+      PORT: 80
+      PUBLIC_URL: http://orbitmines.localhost
+      REACT_APP_BASE_URL: http://orbitmines.localhost
+
+      # experiments.lazyCompilation
+      LAZY_COMPILATION_CLIENT_URL: http://lazy-compilation.webpack.orbitmines.localhost
+      LAZY_COMPILATION_PORT: 40000
+
+      # File polling from host-machine for file changes
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+
+      # https://github.com/facebook/create-react-app/issues/11779
+      # Web socket configuration ws://HOST:PORT/ws
+      WDS_SOCKET_HOST: 'orbitmines.localhost'
+      WDS_SOCKET_PORT: 0 # Defaults to the one used in window.location
+    volumes:
+      - ./github.com/orbitmines/interface/browser:/app
+    networks:
+      - local-orbitmines
   nginx:
+    hostname: 'orbitmines.localhost'
     image: nginx:latest
     ports:
 #      - "4001:4001"
@@ -17,16 +47,21 @@ services:
     volumes:
       - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf
     restart: always
-    depends_on:
-      - npm-registry
-      - private-ipfs-node
-#      - public-ipfs-node
-      - gitlab
+    networks:
+      local-orbitmines:
+        aliases:
+          # TODO: Better solution than this.. (perphaps; https://github.com/docker/compose/issues/7493)
+          - lazy-compilation.webpack.orbitmines.localhost
+          - public.ipfs.orbitmines.localhost
+          - private.ipfs.orbitmines.localhost
+          - gitlab.orbitmines.localhost
+          - npm.orbitmines.localhost
+          - orbitmines.localhost
   npm-registry:
     image: verdaccio/verdaccio:nightly-master
     restart: always
     user: root # TODO; FIX FILE ACCESS on current user?
-#    ports:*
+#    ports:
 #      - "4873:4873"
     volumes:
       # Configuration
@@ -35,6 +70,8 @@ services:
       - ./.orbitmines/npm-registry/conf:/verdaccio/conf
       - ./.orbitmines/npm-registry/storage:/verdaccio/storage
       - ./.orbitmines/npm-registry/plugins:/verdaccio/plugins
+    networks:
+      - local-orbitmines
   gitlab:
     image: gitlab/gitlab-ee:15.5.6-ee.0
     user: root # TODO; FIX FILE ACCESS on current user?
@@ -55,6 +92,8 @@ services:
       - ./.orbitmines/git/gitlab/data:/var/opt/gitlab
       - ./.orbitmines/git/gitlab/logs:/var/log/gitlab
       - ./.orbitmines/git/gitlab/config:/etc/gitlab
+    networks:
+      - local-orbitmines
   public-ipfs-node:
     image: ipfs/kubo:v0.18.1
     user: root # TODO; FIX FILE ACCESS on current user?
@@ -67,6 +106,8 @@ services:
       # Storage on host
       - ./.orbitmines/ipfs/public/export:/export
       - ./.orbitmines/ipfs/public/data/ipfs:/data/ipfs
+    networks:
+      - local-orbitmines
   private-ipfs-node:
     image: ipfs/kubo:v0.18.1
     user: root # TODO; FIX FILE ACCESS on current user?
@@ -82,3 +123,5 @@ services:
       # Storage on host
       - ./.orbitmines/ipfs/private/export:/export
       - ./.orbitmines/ipfs/private/data/ipfs:/data/ipfs
+    networks:
+      - local-orbitmines
