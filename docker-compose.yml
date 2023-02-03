@@ -55,18 +55,20 @@ services:
       - ./.orbitmines/git/gitlab/data:/var/opt/gitlab
       - ./.orbitmines/git/gitlab/logs:/var/log/gitlab
       - ./.orbitmines/git/gitlab/config:/etc/gitlab
-#  public-ipfs-node:
-#    image: ipfs/kubo:v0.16.0
-#    user: root # TODO; FIX FILE ACCESS on current user?
+  public-ipfs-node:
+    image: ipfs/kubo:v0.18.1
+    user: root # TODO; FIX FILE ACCESS on current user?
+    restart: always
 #    environment:
 #      IPFS_LOGGING: debug
-#    volumes:
-#      # Storage on host
-#      - ./.orbitmines/ipfs/public/export:/export
-#      - ./.orbitmines/ipfs/public/data/ipfs:/data/ipfs
+    volumes:
+      # Configuration
+      - ./conf/ipfs/public:/orbitmines/conf
+      # Storage on host
+      - ./.orbitmines/ipfs/public/export:/export
+      - ./.orbitmines/ipfs/public/data/ipfs:/data/ipfs
   private-ipfs-node:
-    build:
-      dockerfile: ./conf/ipfs/private/Dockerfile
+    image: ipfs/kubo:v0.18.1
     user: root # TODO; FIX FILE ACCESS on current user?
     restart: always
     environment:
@@ -74,8 +76,8 @@ services:
       # To be extra cautious, You can also set the LIBP2P_FORCE_PNET environment variable to 1 to force the usage of
       # private networks. If no private network is configured, the daemon will fail to start.
       LIBP2P_FORCE_PNET: 1
+#    entrypoint: /orbitmines/conf/config.sh
     volumes:
-      # Configuration
       - ./conf/ipfs/private/swarm.key:/data/ipfs/swarm.key
       # Storage on host
       - ./.orbitmines/ipfs/private/export:/export

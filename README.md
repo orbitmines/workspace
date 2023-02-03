@@ -1,6 +1,16 @@
 ### TODO
 - Socials: [NPM](https://www.npmjs.com/org/orbitmines)
 
+### Endpoints
+
+| Local Name        | Endpoint                                      |
+|-------------------|-----------------------------------------------|
+| `orbitmines.com`  | http://orbitmines.localhost                   |
+| NPM Registry      | http://npm.orbitmines.localhost               |
+| Gitlab Instance   | http://gitlab.orbitmines.localhost            |
+| Private IPFS Node | http://private.ipfs.orbitmines.localhost      |
+| Public IPFS Node  | http://public.ipfs.orbitmines.localhost/webui |
+
 ---
 
 ### Prerequisits
