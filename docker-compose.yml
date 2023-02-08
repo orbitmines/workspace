@@ -12,8 +12,9 @@ networks:
 services:
   http:
     build:
-      context: ./github.com/orbitmines/interface/browser
+      context: ./github.com/orbitmines/explorer/interface/browser
       dockerfile: ./Dockerfile
+    restart: always
     environment:
       PORT: 80
       PUBLIC_URL: http://orbitmines.localhost
@@ -32,7 +33,7 @@ services:
       WDS_SOCKET_HOST: 'orbitmines.localhost'
       WDS_SOCKET_PORT: 0 # Defaults to the one used in window.location
     volumes:
-      - ./github.com/orbitmines/interface/browser:/app
+      - ./github.com/orbitmines/explorer/interface/browser:/app
     networks:
       - local-orbitmines
   nginx:
